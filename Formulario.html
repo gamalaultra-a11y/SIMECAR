@@ -6,13 +6,17 @@
   <title>Registro EPP - SIMECAR</title>
   <link rel="icon" href="logo.png" type="image/png">
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Motor de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body class="bg-slate-100 min-h-screen p-4 font-sans text-slate-800 flex justify-center">
 
-  <div class="max-w-3xl w-full">
-    <!-- CABECERA -->
+  <style>
+    .fade-in { animation: fadeIn 0.5s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 font-sans text-slate-800 flex justify-center items-center" oncontextmenu="return false;">
+
+
+  <div id="contenedorPrincipal" class="max-w-3xl w-full fade-in">
     <div class="text-center mb-8 mt-4">
       <h1 class="text-3xl font-bold text-slate-900 tracking-tight">SIMECAR</h1>
       <p class="text-slate-500">Asignación de Personal y Registro</p>
@@ -20,7 +24,7 @@
 
     <form id="formularioEpp" class="space-y-6">
       
-      <!-- SECCIÓN LEADER -->
+
       <div class="bg-white p-4 rounded shadow-sm border border-slate-200 flex items-center gap-4">
         <span class="bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded uppercase tracking-wide">Leader</span>
         <input type="text" id="liderNombre" required placeholder="Nombre del Leader" class="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:border-blue-500 bg-slate-50">
@@ -30,7 +34,7 @@
         </select>
       </div>
 
-      <!-- SECCIÓN TÉCNICOS -->
+
       <div class="bg-white p-5 rounded shadow-sm border border-slate-200">
         <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
           <h3 class="font-bold text-slate-700 text-sm uppercase">Técnicos Asignados</h3>
@@ -39,11 +43,10 @@
           </button>
         </div>
         
-        <!-- Contenedor donde aparecerán los técnicos dinámicamente -->
+
         <div id="contenedorTecnicos" class="space-y-3"></div>
       </div>
 
-      <!-- SECCIÓN DATOS Y FOTO -->
       <div class="bg-white p-5 rounded shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Número de Team</label>
@@ -71,16 +74,25 @@
     </form>
   </div>
 
+  <div id="pantallaExito" class="hidden w-full max-w-2xl bg-white p-12 rounded shadow-sm border border-slate-200 text-center fade-in">
+    <div class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-green-100 mb-6">
+      <svg class="h-12 w-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+    </div>
+    <h2 class="text-3xl font-bold text-slate-800 mb-4">Registro de asistencia enviado con éxito</h2>
+    <p class="text-slate-500 mb-8">La información y la evidencia han sido guardadas de forma segura.</p>
+    <button onclick="location.reload()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold py-2 px-6 rounded shadow-sm transition-colors">
+      Enviar otro registro
+    </button>
+  </div>
+
   <script>
 
-// --- 1. CONFIGURACIÓN DE SUPABASE ---
     const supabaseUrl = 'https://tdznomernindagzvmgxf.supabase.co';
     const supabaseKey = 'sb_publishable_ZSrilY65_GHCV0iZyqYBHA_9QijZPN-';
-    
-    // AQUÍ ESTABA EL ERROR: La forma correcta es supabase.createClient
     const db = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // --- 2. LÓGICA DE TÉCNICOS DINÁMICOS ---
     let contadorTecnicos = 0;
     const contenedor = document.getElementById('contenedorTecnicos');
 
@@ -105,15 +117,19 @@
       document.getElementById(idFila).remove();
     }
 
-    // Agregamos un técnico vacío por defecto al cargar la página
-    window.onload = agregarTecnico;
+    window.onload = () => {
+      agregarTecnico();
+      const hoy = new Date().toISOString().split('T')[0];
+      document.getElementById('fechaRegistro').value = hoy;
+      const ahora = new Date();
+      const horaStr = String(ahora.getHours()).padStart(2, '0') + ':' + String(ahora.getMinutes()).padStart(2, '0');
+      document.getElementById('horaRegistro').value = horaStr;
+    };
 
-    // --- 3. GUARDAR EN BASE DE DATOS ---
     document.getElementById('formularioEpp').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btnGuardar = document.getElementById('btnGuardar');
       
-      // Recopilar datos de los técnicos
       const tecnicosData = [];
       const nombresInputs = document.querySelectorAll('.input-tecnico-nombre');
       const asistenciasSelects = document.querySelectorAll('.input-tecnico-asistencia');
@@ -141,7 +157,6 @@
       btnGuardar.classList.add('bg-slate-400');
 
       try {
-        // A. Subir la foto al bucket 'evidencias'
         const nombreArchivo = `${Date.now()}_${archivo.name.replace(/\s/g, '_')}`;
         const { data: uploadData, error: uploadError } = await db.storage
           .from('evidencias')
@@ -149,12 +164,10 @@
 
         if (uploadError) throw uploadError;
 
-        // B. Obtener el link público de la foto
         const { data: publicLink } = db.storage
           .from('evidencias')
           .getPublicUrl(nombreArchivo);
 
-        // C. Guardar todo en la tabla registros_epp
         const { error: dbError } = await db.from('registros_epp').insert([{
           lider_nombre: liderNombre,
           lider_asistencia: liderAsistencia,
@@ -167,25 +180,25 @@
 
         if (dbError) throw dbError;
 
-        alert("¡Registro guardado exitosamente!");
-        document.getElementById('formularioEpp').reset();
-        contenedor.innerHTML = ""; // Limpiar técnicos
-        agregarTecnico(); // Volver a poner uno vacío
+        document.getElementById('contenedorPrincipal').classList.add('hidden');
+        document.getElementById('pantallaExito').classList.remove('hidden');
 
       } catch (error) {
         console.error("Error completo:", error);
         alert("Hubo un error al guardar. Revisa la consola.");
-      } finally {
         btnGuardar.disabled = false;
         btnGuardar.innerText = "Guardar Registro";
         btnGuardar.classList.add('bg-green-600');
         btnGuardar.classList.remove('bg-slate-400');
       }
     });
+
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) {
+        e.preventDefault();
+      }
+    });
   </script>
-  <script>
-document.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('keydown',e=>{if(e.keyCode===123||(e.ctrlKey&&e.shiftKey&&(e.keyCode===73||e.keyCode===74))||(e.ctrlKey&&e.keyCode===85))e.preventDefault();});
-</script>
 </body>
 </html>

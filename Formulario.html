@@ -52,10 +52,10 @@
           <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Número de Team</label>
           <input type="text" id="numeroTeam" required class="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:border-blue-500">
         </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Cargar Evidencia (Foto)</label>
-          <input type="file" id="fotoEvidencia" accept="image/*" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-slate-300 rounded">
-        </div>
+         <div>
+  <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tomar Evidencia (Cámara)</label>
+  <input type="file" id="fotoEvidencia" accept="image/*" capture="environment" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-slate-300 rounded">
+</div>
         <div>
           <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Fecha</label>
           <input type="date" id="fechaRegistro" required class="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:border-blue-500">
@@ -200,5 +200,35 @@
       }
     });
   </script>
+  <script>
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
+    document.addEventListener('keydown', function(e) {
+        // Bloquear F12
+        if (e.key === 'F12' || e.keyCode === 123) {
+            e.preventDefault();
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) {
+            e.preventDefault();
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) {
+            e.preventDefault();
+            return false;
+        }
+        if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    document.addEventListener('selectstart', function(e) {
+        e.preventDefault();
+    });
+    document.addEventListener('dragstart', function(e) {
+        e.preventDefault();
+    });
+</script>
 </body>
 </html>
